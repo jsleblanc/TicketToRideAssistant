@@ -31,6 +31,13 @@ type tracked_t = {
     parent:city_t option
 }
 
+type plan_t = {
+    start_city:city_t
+    finish_city:city_t
+    trains:int
+    cities:city_t seq    
+}
+
 [<EntryPoint>]
 let main argv =
     
@@ -56,6 +63,21 @@ let main argv =
     let phoenix = { name = "Phoenix" }
     let elpaso = { name = "El Paso" }
     let santafe = { name = "Santa Fe" }
+    let oaklahoma = { name = "Oaklahoma City" }
+    let saintlouis = { name = "Saint Louis" }
+    let nashville = { name = "Nashville" }
+    let pittsburgh = { name = "Pittsburgh" }
+    let boston = { name = "Boston" }
+    let newyork = { name = "New York" }
+    let washington = { name = "Washington" }
+    let raleigh = { name = "Raleigh" }
+    let atlanta = { name = "Atlanta" }
+    let charleston = { name = "Charleston" }
+    let littlerock = { name = "Little Rock" }
+    let dallas = { name = "Dallas" }
+    let houston = { name = "Houston" }
+    let neworleans = { name = "New Orleans" }
+    let miami = { name = "Miami" }
     
     let routes = seq {
         { from_city = vancouver; to_city = seattle; trains = 1; color = None; }
@@ -102,6 +124,52 @@ let main argv =
         { from_city = phoenix; to_city = santafe; trains = 3; color = None; }
         { from_city = elpaso; to_city = santafe; trains = 2; color = None; }
         { from_city = santafe; to_city = denver; trains = 2; color = None; }
+        { from_city = denver; to_city = oaklahoma; trains = 4; color = Some Red; }
+        { from_city = santafe; to_city = oaklahoma; trains = 3; color = Some Blue; }
+        { from_city = elpaso; to_city = oaklahoma; trains = 5; color = Some Yellow; }
+        { from_city = elpaso; to_city = dallas; trains = 4; color = Some Red; }
+        { from_city = elpaso; to_city = houston; trains = 6; color = Some Green; }
+        { from_city = kansas; to_city = oaklahoma; trains = 2; color = None; }
+        { from_city = oaklahoma; to_city = dallas; trains = 2; color = None; }
+        { from_city = dallas; to_city = houston; trains = 1; color = None; }
+        { from_city = kansas; to_city = saintlouis; trains = 2; color = Some Blue; }
+        { from_city = kansas; to_city = saintlouis; trains = 2; color = Some Pink; }
+        { from_city = oaklahoma; to_city = littlerock; trains = 2; color = None; }
+        { from_city = dallas; to_city = littlerock; trains = 2; color = None; }
+        { from_city = houston; to_city = neworleans; trains = 2; color = None; }
+        { from_city = littlerock; to_city = neworleans; trains = 3; color = Some Green; }
+        { from_city = littlerock; to_city = nashville; trains = 3; color = Some White; }
+        { from_city = neworleans; to_city = miami; trains = 6; color = Some Red; }
+        { from_city = atlanta; to_city = miami; trains = 5; color = Some Blue; }
+        { from_city = charleston; to_city = miami; trains = 5; color = Some Pink; }
+        { from_city = neworleans; to_city = atlanta; trains = 4; color = Some Yellow; }
+        { from_city = neworleans; to_city = atlanta; trains = 4; color = Some Orange; }
+        { from_city = toronto; to_city = chicago; trains = 4; color = Some White; }
+        { from_city = chicago; to_city = saintlouis; trains = 2; color = Some Green; }
+        { from_city = chicago; to_city = saintlouis; trains = 2; color = Some White; }
+        { from_city = montreal; to_city = boston; trains = 2; color = None; }
+        { from_city = montreal; to_city = newyork; trains = 3; color = Some Blue; }
+        { from_city = toronto; to_city = pittsburgh; trains = 2; color = None; }
+        { from_city = saintlouis; to_city = littlerock; trains = 2; color = None; }
+        { from_city = saintlouis; to_city = nashville; trains = 2; color = None; }
+        { from_city = nashville; to_city = atlanta; trains = 1; color = None; }
+        { from_city = saintlouis; to_city = pittsburgh; trains = 5; color = Some Green; }
+        { from_city = chicago; to_city = pittsburgh; trains = 3; color = Some Orange; }
+        { from_city = chicago; to_city = pittsburgh; trains = 3; color = Some Black; }
+        { from_city = pittsburgh; to_city = nashville; trains = 4; color = Some Yellow; }
+        { from_city = pittsburgh; to_city = newyork; trains = 2; color = Some White; }
+        { from_city = pittsburgh; to_city = newyork; trains = 2; color = Some Green; }
+        { from_city = boston; to_city = newyork; trains = 2; color = Some Yellow; }
+        { from_city = boston; to_city = newyork; trains = 2; color = Some Red; }
+        { from_city = newyork; to_city = washington; trains = 2; color = Some Orange; }
+        { from_city = newyork; to_city = washington; trains = 2; color = Some Black; }
+        { from_city = pittsburgh; to_city = washington; trains = 2; color = None; }
+        { from_city = pittsburgh; to_city = raleigh; trains = 2; color = None; }
+        { from_city = nashville; to_city = raleigh; trains = 3; color = Some Black; }
+        { from_city = atlanta; to_city = charleston; trains = 2; color = None; }
+        { from_city = raleigh; to_city = charleston; trains = 2; color = None; }
+        { from_city = atlanta; to_city = raleigh; trains = 2; color = None; }
+        { from_city = raleigh; to_city = washington; trains = 2; color = None; }
     }
     
     let createOtherDirection (r:route_t) =
@@ -110,30 +178,14 @@ let main argv =
             { r with from_city = r.to_city; to_city = r.from_city; }
         }
     
-    let cities = Set.ofList [
-        vancouver
-        seattle
-        portland
-        calgary
-        helena
-        winnipeg
-        saltlake
-        sanfran
-        duluth
-        omaha
-        denver
-        saultmarie
-        toronto
-        montreal
-        chicago
-        kansas
-        vegas
-        losangeles
-        phoenix
-        elpaso
-        santafe
-    ]
-    
+    let cities =
+        routes
+        |> Seq.map (fun r -> [r.to_city; r.from_city])
+        |> Seq.collect (fun c -> c)
+        |> Seq.distinct
+        |> Seq.toList
+        |> Set.ofList
+
     let map =
         routes
         |> Seq.map createOtherDirection
@@ -183,18 +235,24 @@ let main argv =
                     match state.[city].parent with
                     | Some p -> yield! getPath p
                     | None -> yield! Seq.empty
+                }                
+                {
+                    start_city = startCity
+                    finish_city = endCity
+                    trains = state.[endCity].distance
+                    cities = getPath endCity |> Seq.rev |> Seq.toList
                 }
-                getPath endCity |> Seq.toList
             else
                 let nextCity = Map.toSeq newState |> Seq.where (fun (c,_) -> newVisited.Contains c |> not) |> Seq.where (fun (_,t) -> t.distance > 0) |> Seq.minBy (fun (_,t) -> t.distance) |> (fun (c,_) -> c)
                 func nextCity newState newVisited
         func startCity startState Set.empty
          
 
-    let result = shortestPath sanfran denver
-        |> Seq.iter (fun c -> printfn "%s" c.name)
-             
-    printfn "Hello World from F#!"
+    let result = shortestPath losangeles newyork
+    
+    printfn "Trains Required %d" result.trains
+    printfn "Cities of route "
+    result.cities |> Seq.iter (fun c -> printfn "%s" c.name)
     
     0 // return an integer exit code
 
