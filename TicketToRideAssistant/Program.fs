@@ -20,9 +20,14 @@ type city_t = {
 
 type route_t = {
     from_city:city_t
-    to_city:city_t;
+    to_city:city_t
     trains:int
-    color:color_t option;
+    color:color_t option
+}
+
+type tracked_t = {
+    distance:int
+    parent:city_t option
 }
 
 [<EntryPoint>]
@@ -135,8 +140,6 @@ let main argv =
         |> Seq.groupBy (fun r -> r.from_city)
         |> Map.ofSeq
     
-    let connections = map.[calgary]
-
     let filterRoutes routes =
         routes
         |> Seq.groupBy (fun r -> r.to_city)
@@ -146,8 +149,6 @@ let main argv =
     //TODO - Dijkstra's for shortest path
     //TODO - minimum spanning tree to find shortest connection that spans multiple nodes, ie: shortest path connecting x cities
         
-    let notContains city state =
-        state |> Set.contains city |> not
 
     let printVisited (v:city_t Set) =
         let s = Set.fold (fun acc c -> acc + c.name + ", ") "" v
@@ -162,17 +163,16 @@ let main argv =
             |> Map.ofSeq         
         let startState = Set.fold (fun (acc:Map<city_t,int>) city -> acc.Add (city, Int32.MaxValue)) (Map.empty<city_t,int>) cities
         let startState = startState.Add (startCity, 0)
-        let add (m:Map<city_t,int>) c t d =
-            if m.[c] = Int32.MaxValue then
-                m.Add(c,d+t)
+        let add (m:Map<city_t,int>) toCity trains distance =
+            if m.[toCity] = Int32.MaxValue then
+                m.Add(toCity,distance + trains)
             else
-                let value = m.[c] + t + d
-                if m.[c] > value then m.Add(c, value) else m            
+                let value = m.[toCity] + trains + distance
+                if m.[toCity] > value then m.Add(toCity, value) else m
         let rec func city state (visited:city_t Set) =
             let toVisit = routeLookup.[city] |> filterRoutes |> Seq.where (fun r -> (visited.Contains r.to_city) |> not) |> Seq.toList
             let newState = Seq.fold (fun acc r -> add acc r.to_city r.trains acc.[city]) state toVisit
             let newVisited = visited.Add city //List.fold (fun acc r -> Set.add r.to_city acc) visited toVisit
-            printVisited newVisited
             if newVisited.Contains endCity then
                 endCity
             else
@@ -182,59 +182,7 @@ let main argv =
          
 
     let result = shortestPath sanfran denver 
-         
-         (*
-    let shortedPath2 startCity endCity =
-        let routeLookup =
-            routes
-            |> Seq.map createOtherDirection
-            |> Seq.collect (fun s -> s)
-            |> Seq.groupBy (fun r -> r.from_city)
-            |> Map.ofSeq
-        let map = Map.empty.Add(startCity, 0)
-        let add (m:Map<city_t,int>) c t =
-            let current = if m.ContainsKey c then m.[c] else 0
-            m.Add(c, current + t)
-        let rec func city (state:Map<city_t,int>) path =
-            if List.contains endCity path then
-                path
-            else
-                let toVisit = routeLookup.[city] |> filterRoutes
-                let newState = Seq.fold (fun s r -> add s r.to_city r.trains) state toVisit
-                
-                //let nextCity = Map.toSeq newState |> Seq.where (fun (_,t) -> t > 0) |> Seq.minBy (fun (_,t) -> t) |> (fun (c,_) -> c)
-                func nextCity newState (nextCity :: path)
-        func startCity map [startCity]
-         
-         
-    let path = shortedPath2 sanfran kansas
-         *)
-         
-(*         
-    let rec shortestPath current last state distances =            
-        if Set.contains last state then
-            state
-        else
-            let unvisitedAdjacents =
-                map.[current]
-                |> Seq.filter (fun r -> (notContains r.to_city state))
-                |> Seq.fold (fun (m:Map<city_t,int>) r ->                        
-                        let current = if m.ContainsKey r.to_city then m.[r.to_city] else 0 
-                        m.Add (r.to_city, (current + r.trains))
-                    ) distances
-            let (closestCity,_) =
-                unvisitedAdjacents
-                |> Map.toSeq
-                |> Seq.minBy (fun (_,trains) -> trains)
-            let newState = state.Add closestCity
-            shortestPath closestCity last newState unvisitedAdjacents
-        *)
-    let map =
-        Map.empty
-        |> Map.add sanfran 0
-        
-    //let path = shortestPath sanfran kansas Set.empty map
-    
+             
     printfn "Hello World from F#!"
     
     0 // return an integer exit code
