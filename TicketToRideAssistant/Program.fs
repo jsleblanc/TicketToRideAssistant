@@ -185,28 +185,19 @@ let main argv =
         |> Seq.distinct
         |> Seq.toList
         |> Set.ofList
-
-    let map =
-        routes
-        |> Seq.map createOtherDirection
-        |> Seq.collect (fun s -> s)
-        |> Seq.groupBy (fun r -> r.from_city)
-        |> Map.ofSeq
+    
+    let unavailableRoutes = seq { { from_city = calgary; to_city = helena; trains = 4; color = None; } } |> Set.ofSeq
     
     let filterRoutes routes =
         routes
+        |> Seq.where (fun r -> unavailableRoutes.Contains r |> not)
         |> Seq.groupBy (fun r -> r.to_city)
         |> Seq.map (fun (_,r) -> Seq.item(0) r)
         |> Seq.toList
         
     //TODO - Dijkstra's for shortest path
     //TODO - minimum spanning tree to find shortest connection that spans multiple nodes, ie: shortest path connecting x cities
-        
-
-    let printVisited (v:city_t Set) =
-        let s = Set.fold (fun acc c -> acc + c.name + ", ") "" v
-        printfn "%s" s
-    
+            
     let shortestPath (startCity:city_t) endCity =
         let routeLookup =
             routes
@@ -248,7 +239,7 @@ let main argv =
         func startCity startState Set.empty
          
 
-    let result = shortestPath losangeles newyork
+    let result = shortestPath calgary omaha
     
     printfn "Trains Required %d" result.trains
     printfn "Cities of route "
