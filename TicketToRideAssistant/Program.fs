@@ -28,6 +28,7 @@ type route_t = {
 
 type tracked_t = {
     distance:int
+    route:route_t option
     parent:city_t option
 }
 
@@ -35,7 +36,8 @@ type plan_t = {
     start_city:city_t
     finish_city:city_t
     trains:int
-    cities:city_t seq    
+    cities:city_t seq
+    colored_trains:Map<color_t,int>
 }
 
 [<EntryPoint>]
@@ -186,7 +188,7 @@ let main argv =
         |> Seq.toList
         |> Set.ofList
     
-    let unavailableRoutes = seq { { from_city = calgary; to_city = helena; trains = 4; color = None; } } |> Set.ofSeq
+    let unavailableRoutes = Set.empty<route_t> //seq { { from_city = calgary; to_city = helena; trains = 4; color = None; } } |> Set.ofSeq
     
     let filterRoutes routes =
         routes
@@ -198,6 +200,16 @@ let main argv =
     //TODO - Dijkstra's for shortest path
     //TODO - minimum spanning tree to find shortest connection that spans multiple nodes, ie: shortest path connecting x cities
             
+    let mapIncrement (map:Map<color_t,int>) (k,v) =
+        match map.TryGetValue k with
+        | true, current -> Map.add k (current + v) map
+        | false, _ -> Map.add k v map
+     
+    let f (x,y) =
+        match (x,y) with
+        | Some a, Some b -> Some (a,b)
+        | _ -> None
+            
     let shortestPath (startCity:city_t) endCity =
         let routeLookup =
             routes
@@ -205,33 +217,35 @@ let main argv =
             |> Seq.collect (fun s -> s)
             |> Seq.groupBy (fun r -> r.from_city)
             |> Map.ofSeq
-        let default_tracked_t = { distance = Int32.MaxValue; parent = None; }
+        let default_tracked_t = { distance = Int32.MaxValue; parent = None; route = None; }
         let startState = Set.fold (fun (acc:Map<city_t,tracked_t>) city -> acc.Add (city, default_tracked_t)) (Map.empty<city_t,tracked_t>) cities
-        let startState = startState.Add (startCity, { distance = 0; parent = None; })
-        let add (m:Map<city_t,tracked_t>) toCity fromCity trains distance =
+        let startState = startState.Add (startCity, { distance = 0; parent = None; route = None; })
+        let add (m:Map<city_t,tracked_t>) toCity fromCity trains distance route =
             let current = m.[toCity]
             if current.distance = Int32.MaxValue then
-                let newTracked = { current with distance = distance + trains; parent = Some fromCity; }
+                let newTracked = { current with distance = distance + trains; parent = Some fromCity; route = Some route; }
                 m.Add(toCity, newTracked)
             else
                 let newDistance = current.distance + trains + distance
-                if current.distance > newDistance then m.Add(toCity, { current with distance = newDistance; parent = Some fromCity; }) else m
+                if current.distance > newDistance then m.Add(toCity, { current with distance = newDistance; parent = Some fromCity; route = Some route; }) else m
         let rec func city state (visited:city_t Set) =
             let toVisit = routeLookup.[city] |> filterRoutes |> Seq.where (fun r -> (visited.Contains r.to_city) |> not) |> Seq.toList
-            let newState = Seq.fold (fun acc r -> add acc r.to_city city r.trains acc.[city].distance) state toVisit
+            let newState = Seq.fold (fun acc r -> add acc r.to_city city r.trains acc.[city].distance r) state toVisit
             let newVisited = visited.Add city
             if newVisited.Contains endCity then
-                let rec getPath (city:city_t) = seq {
-                    yield city
-                    match state.[city].parent with
-                    | Some p -> yield! getPath p
+                let rec getPath (city:city_t) = seq {                    
+                    yield state.[city].route
+                    match state.[city].route with
+                    | Some r -> yield! getPath r.from_city
                     | None -> yield! Seq.empty
-                }                
+                }
+                let path = getPath endCity |> Seq.choose id |> Seq.rev |> Seq.toList
                 {
                     start_city = startCity
                     finish_city = endCity
                     trains = state.[endCity].distance
-                    cities = getPath endCity |> Seq.rev |> Seq.toList
+                    cities = path |> Seq.map (fun r -> r.from_city)
+                    colored_trains = path |> Seq.map (fun r -> (r.color, Some r.trains)) |> Seq.map f |> Seq.choose id |> Seq.fold (fun acc r -> mapIncrement acc r) Map.empty
                 }
             else
                 let nextCity = Map.toSeq newState |> Seq.where (fun (c,_) -> newVisited.Contains c |> not) |> Seq.where (fun (_,t) -> t.distance > 0) |> Seq.minBy (fun (_,t) -> t.distance) |> (fun (c,_) -> c)
