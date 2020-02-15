@@ -5,6 +5,12 @@ open System
 open System
 open System.Runtime.CompilerServices
 
+open TicketToRideAssistant.Cities
+open TicketToRideAssistant.PathFinding
+open TicketToRideAssistant
+
+open TicketToRideAssistant
+(*
 type color_t =
     | Blue
     | Green
@@ -39,10 +45,19 @@ type plan_t = {
     cities:city_t seq
     colored_trains:Map<color_t,int>
 }
+*)
 
 [<EntryPoint>]
 let main argv =
     
+    let c = getCities
+    let sp = shortestPath getRoutes getCitiesSet
+    let result = sp c.vancouver c.miami
+    printPlan result
+    
+    printfn "done"
+    
+    (*
     
     let vancouver = { name = "Vancouver" }
     let seattle = { name = "Seattle" }
@@ -258,7 +273,7 @@ let main argv =
     printfn "Trains Required %d" result.trains
     printfn "Cities of route "
     result.cities |> Seq.iter (fun c -> printfn "%s" c.name)
-    
+    *)
     0 // return an integer exit code
 
 
