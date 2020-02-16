@@ -6,9 +6,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Cities.fs" />
-        <Compile Include="PathFinding.fs" />
         <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\AssistantLib\AssistantLib.fsproj" />
     </ItemGroup>
 
 </Project>

@@ -1,4 +1,4 @@
-namespace TicketToRideAssistant
+namespace AssistantLib
 
 module Cities =
 
