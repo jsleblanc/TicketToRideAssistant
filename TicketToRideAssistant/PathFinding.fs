@@ -24,7 +24,7 @@ module PathFinding =
         | true, current -> Map.add k (current @ [v]) map
         | false, _ -> Map.add k [v] map
         
-    let shortestPath (routeLookup:Map<city_t,route_t seq>) (cities:city_t Set) (startCity:city_t) (endCity:city_t) =
+    let private shortestPath_i (routeLookup:Map<city_t,route_t seq>) (cities:city_t Set) (startCity:city_t) (endCity:city_t) =
         let default_tracked_t = { distance = Int32.MaxValue; parent = None; route = None; }
         let startState = Set.fold (fun (acc:Map<city_t,tracked_t>) city -> acc.Add (city, default_tracked_t)) (Map.empty<city_t,tracked_t>) cities
         let startState = startState.Add (startCity, { distance = 0; parent = None; route = None; })
@@ -66,6 +66,8 @@ module PathFinding =
     let private total counts = List.fold (fun acc v -> (acc + v)) 0 counts
 
     let private items counts = List.fold (fun acc v -> acc + (sprintf "%d, " v)) "" counts  
+    
+    let shortestPath = shortestPath_i getRoutes getCitiesSet
     
     let printPlan plan =
         printfn "%s to %s requires %d trains" plan.start_city.name plan.finish_city.name plan.trains

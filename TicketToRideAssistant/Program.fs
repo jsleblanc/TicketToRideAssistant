@@ -50,9 +50,8 @@ type plan_t = {
 [<EntryPoint>]
 let main argv =
     
-    let c = getCities
-    let sp = shortestPath getRoutes getCitiesSet
-    let result = sp c.vancouver c.miami
+    let c = getCities 
+    let result = shortestPath c.vancouver c.miami
     printPlan result
     
     printfn "done"
