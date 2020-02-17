@@ -88,8 +88,7 @@ module Cities =
         let c = getCities
         seq {
             c.vancouver
-            c.vancouver;
-            c.seattle;
+            c.seattle
             c.portland
             c.calgary
             c.helena
